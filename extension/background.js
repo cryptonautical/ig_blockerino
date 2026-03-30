@@ -161,6 +161,16 @@ async function igFetch(path, method = "GET", body = null) {
     return igFetch(path, method, body);
   }
   if (resp.status === 429) throw new Error("429 rate limited");
+  if (resp.status === 400) {
+    const text400 = await resp.text();
+    try {
+      const data = JSON.parse(text400);
+      throw new Error(data.message || data.feedback_message || "400 Bad Request");
+    } catch (e) {
+      if (e.message) throw e;
+      throw new Error("400 Bad Request");
+    }
+  }
 
   const text = await resp.text();
   try {
@@ -429,10 +439,14 @@ async function getFollowing(userId, maxPages = 50) {
 }
 
 async function blockUser(userId) {
-  return igFetch(`friendships/block/${userId}/`, "POST");
+  const data = await igFetch(`friendships/block/${userId}/`, "POST");
+  if (data.status === "fail") {
+    throw new Error(data.message || data.feedback_message || "Block failed");
+  }
+  return data;
 }
 
-// Exponential-backoff retry matching blockerino.py's block_with_retry
+// Exponential-backoff retry for transient errors (429 only)
 async function blockUserWithRetry(userId, retries = 4, baseDelay = 60000) {
   let delay = baseDelay;
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -440,7 +454,12 @@ async function blockUserWithRetry(userId, retries = 4, baseDelay = 60000) {
       await blockUser(userId);
       return;
     } catch (e) {
-      if (e.message.includes("429") && attempt < retries) {
+      const msg = e.message.toLowerCase();
+      // Daily limit / feedback_required — bubble up immediately, no retry
+      if (msg.includes("please wait") || msg.includes("feedback_required") || msg.includes("400")) {
+        throw new Error("daily_limit");
+      }
+      if (msg.includes("429") && attempt < retries) {
         const jitter = Math.random() * 5000;
         log(`Rate limited; retrying in ${((delay + jitter) / 1000).toFixed(0)}s…`);
         await sleep(delay + jitter);
@@ -701,6 +720,14 @@ async function processTarget(entry) {
         entry.blocked++;
         actionsThisWindow++;
       } catch (e) {
+        if (e.message === "daily_limit") {
+          entry.status = "error";
+          entry.error = "Daily block limit reached";
+          log(`Daily block limit reached — stopped at ${entry.blocked}/${entry.total}. Try again tomorrow.`);
+          state.stopRequested = true;
+          broadcastState();
+          return;
+        }
         if (e.message.includes("Session expired")) {
           const ok = await handleSessionLoss();
           if (!ok) { entry.status = "error"; entry.error = "Session lost"; return; }
