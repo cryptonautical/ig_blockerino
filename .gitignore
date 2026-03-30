@@ -5,3 +5,6 @@ dist/
 build/
 .env
 *.log
+ig_session.json
+venv/
+.venv/

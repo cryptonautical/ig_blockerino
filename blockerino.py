@@ -74,7 +74,7 @@ def main():
         print("Usage: python blockerino.py [per_minute_limit]")
         sys.exit(1)
 
-    login_user, login_pass, target_username = 'user', 'pass', sys.argv[1]
+    login_user, login_pass, target_username = 'uticajnik', 'p3t@brzin@', sys.argv[1]
     per_minute_limit = int(sys.argv[2]) if len(sys.argv) == 3 else 6
 
     cl = make_client()

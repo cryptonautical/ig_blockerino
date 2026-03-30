@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        {
+          "header": "User-Agent",
+          "operation": "set",
+          "value": "Instagram 385.0.0.47.74 Android (26/8.0.0; 480dpi; 1080x1920; OnePlus; 6T Dev; devitron; qcom; en_US; 378906843)"
+        }
+      ]
+    },
+    "condition": {
+      "urlFilter": "||i.instagram.com",
+      "resourceTypes": ["xmlhttprequest", "other"]
+    }
+  }
+]

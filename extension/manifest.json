@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Blockerino",
+  "version": "1.0.0",
+  "description": "Mass-block every account a target Instagram profile follows.",
+  "permissions": [
+    "cookies",
+    "storage",
+    "alarms",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://i.instagram.com/*"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [{
+      "id": "ig_mobile_ua",
+      "enabled": true,
+      "path": "rules.json"
+    }]
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

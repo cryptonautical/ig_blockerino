@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;
+      --accent:#58a6ff;--green:#3fb950;--red:#f85149;--yellow:#d29922;--input-bg:#0d1117}
+    body{width:400px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:var(--bg);color:var(--text)}
+
+    /* header */
+    .hdr{background:var(--card);border-bottom:1px solid var(--border);padding:12px 16px;
+      display:flex;align-items:center;justify-content:space-between}
+    .hdr h1{font-size:1rem;font-weight:600}
+    .hdr h1 span{color:var(--accent)}
+    .user-info{display:flex;align-items:center;gap:8px}
+    .badge{font-size:.8rem;color:var(--green)}
+    .btn-logout{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 10px;
+      border-radius:5px;cursor:pointer;font-size:.72rem}
+    .btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+    /* login form */
+    #login-view{padding:28px 20px;display:none}
+    #login-view h2{font-size:1.1rem;margin-bottom:4px}
+    #login-view .sub{color:var(--muted);font-size:.82rem;margin-bottom:20px}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:3px}
+    .field input{width:100%;padding:9px 10px;border-radius:6px;border:1px solid var(--border);
+      background:var(--input-bg);color:var(--text);font-size:.88rem;outline:none}
+    .field input:focus{border-color:var(--accent)}
+    .btn{display:block;width:100%;padding:9px;border:none;border-radius:6px;font-size:.88rem;
+      font-weight:600;cursor:pointer;text-align:center}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-primary:hover{opacity:.85}
+    .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+    .login-error{color:var(--red);font-size:.82rem;margin-top:10px;display:none}
+
+    /* main content */
+    #main{display:none;padding:12px 16px 16px}
+
+    /* add row */
+    .add-row{display:flex;gap:8px;margin-bottom:14px}
+    .add-row input{flex:1;padding:8px 10px;border-radius:6px;border:1px solid var(--border);
+      background:var(--input-bg);color:var(--text);font-size:.85rem;outline:none}
+    .add-row input:focus{border-color:var(--accent)}
+    .add-row button{padding:8px 14px;border:none;border-radius:6px;background:var(--accent);
+      color:#fff;font-weight:600;cursor:pointer;font-size:.82rem;white-space:nowrap}
+
+    /* stop button */
+    .stop-row{margin-bottom:14px;display:none}
+    .btn-stop{width:100%;padding:8px;border:1px solid var(--red);border-radius:6px;background:transparent;
+      color:var(--red);font-weight:600;cursor:pointer;font-size:.82rem}
+    .btn-stop:hover{background:rgba(248,81,73,.12)}
+    .btn-stop:disabled{opacity:.5;cursor:not-allowed}
+
+    /* session banner */
+    .session-banner{display:none;background:rgba(210,153,34,.12);border:1px solid var(--yellow);
+      color:var(--yellow);padding:10px 12px;border-radius:6px;margin-bottom:14px;font-size:.8rem;
+      line-height:1.4}
+
+    /* section titles */
+    .sec-title{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;
+      margin:14px 0 8px;font-weight:500}
+    .sec-title:first-child{margin-top:0}
+
+    /* queue */
+    .queue-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;
+      border-bottom:1px solid var(--border);font-size:.85rem}
+    .queue-item:last-child{border-bottom:none}
+    .qi-left{display:flex;align-items:center;gap:8px}
+    .qi-dot{width:7px;height:7px;border-radius:50%}
+    .qi-dot.active{background:var(--green);box-shadow:0 0 5px var(--green)}
+    .qi-dot.waiting{background:var(--muted)}
+    .qi-dot.stopped{background:var(--yellow)}
+    .qi-name{font-weight:500}
+    .qi-stat{color:var(--muted);font-size:.75rem;margin-left:4px}
+    .qi-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;
+      padding:2px 6px;border-radius:4px}
+    .qi-remove:hover{color:var(--red);background:rgba(248,81,73,.1)}
+    .empty{color:var(--muted);font-size:.82rem;font-style:italic}
+
+    /* progress */
+    .prog{margin:6px 0 4px}
+    .prog-bar-bg{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+    .prog-bar{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+    .prog-stats{display:flex;gap:12px;font-size:.75rem;color:var(--muted);margin-top:4px}
+    .s-ok{color:var(--green)} .s-fail{color:var(--red)}
+
+    /* log */
+    .log-box{max-height:160px;overflow-y:auto;font-family:'SF Mono',Consolas,monospace;
+      font-size:.75rem;line-height:1.55;color:var(--muted);padding:2px 0}
+    .log-box::-webkit-scrollbar{width:5px}
+    .log-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+    .log-ts{color:var(--muted);margin-right:6px}
+
+    /* history */
+    .hist-item{display:flex;align-items:center;gap:8px;padding:6px 0;
+      border-bottom:1px solid var(--border);font-size:.82rem}
+    .hist-item:last-child{border-bottom:none}
+    .hi-icon{font-size:.82rem}
+    .hi-stats{color:var(--muted);font-size:.75rem;margin-left:auto}
+    .clear-link{font-size:.72rem;color:var(--muted);cursor:pointer;margin-left:8px;
+      text-decoration:underline}
+    .clear-link:hover{color:var(--red)}
+
+    /* toast */
+    .toast{position:fixed;top:8px;left:50%;transform:translateX(-50%);background:var(--card);
+      border:1px solid var(--red);color:var(--red);padding:8px 16px;border-radius:6px;
+      font-size:.82rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:10}
+    .toast.show{opacity:1}
+  </style>
+</head>
+<body>
+
+  <div class="hdr">
+    <h1><span>&#9632;</span> Blockerino</h1>
+    <div class="user-info" id="user-info" style="display:none">
+      <span class="badge" id="badge"></span>
+      <button class="btn-logout" id="btn-logout">Logout</button>
+    </div>
+  </div>
+
+  <!-- Login form -->
+  <div id="login-view">
+    <h2>Sign in</h2>
+    <p class="sub">Enter your Instagram credentials.</p>
+    <form id="login-form" autocomplete="off">
+      <div class="field">
+        <label for="ig-user">Username</label>
+        <input id="ig-user" type="text" placeholder="your_username" required>
+      </div>
+      <div class="field">
+        <label for="ig-pass">Password</label>
+        <input id="ig-pass" type="password" placeholder="••••••••" required>
+      </div>
+      <button class="btn btn-primary" type="submit" id="btn-login">Log in</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
+  </div>
+
+  <!-- Challenge / verification code -->
+  <div id="challenge-view" style="display:none;padding:28px 20px">
+    <h2 style="font-size:1.1rem;margin-bottom:4px">Verification required</h2>
+    <p class="sub" id="challenge-info">Enter the code sent to your email or phone.</p>
+    <form id="challenge-form" autocomplete="off">
+      <div class="field">
+        <label for="challenge-code">Security code</label>
+        <input id="challenge-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="123456" required
+          style="text-align:center;letter-spacing:6px;font-size:1.1rem">
+      </div>
+      <button class="btn btn-primary" type="submit" id="btn-verify">Verify</button>
+      <div style="margin-top:10px;text-align:center">
+        <a href="#" id="btn-resend" style="color:var(--accent);font-size:.78rem;text-decoration:underline">Resend code</a>
+      </div>
+      <div class="login-error" id="challenge-error"></div>
+    </form>
+  </div>
+
+  <!-- Main UI -->
+  <div id="main">
+    <div class="session-banner" id="session-banner">
+      Session expired. Re-login required to continue.
+    </div>
+    <form class="add-row" id="add-form">
+      <input id="target-input" type="text" placeholder="@username" maxlength="30" required>
+      <button type="submit">Add to Queue</button>
+    </form>
+    <div class="stop-row" id="stop-row">
+      <button class="btn-stop" id="btn-stop">Stop Blocking</button>
+    </div>
+
+    <!-- Active / Waiting -->
+    <div class="sec-title">Queue</div>
+    <div id="queue-list"></div>
+    <div class="prog" id="prog-wrap" style="display:none">
+      <div class="prog-bar-bg"><div class="prog-bar" id="prog-bar"></div></div>
+      <div class="prog-stats">
+        <span id="p-count"></span>
+        <span class="s-ok" id="p-ok"></span>
+        <span class="s-fail" id="p-fail"></span>
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div class="sec-title">Activity</div>
+    <div class="log-box" id="log-box"></div>
+
+    <!-- History -->
+    <div class="sec-title">History <span class="clear-link" id="clear-hist">clear</span></div>
+    <div id="history-list"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
